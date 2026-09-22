@@ -46,6 +46,7 @@ class PlaceUnderAction extends CardGameAction {
         }
 
         card.controller = this.parent.controller;
+        card.updateEffectContexts();
         card.parent = this.parent;
         card.moveTo(this.isGraft ? 'grafted' : 'under');
         card.facedown = this.facedown;

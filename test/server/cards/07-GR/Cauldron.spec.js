@@ -126,4 +126,78 @@ describe('Cauldron', function () {
             );
         });
     });
+
+    describe('when used by an opponent', function () {
+        beforeEach(function () {
+            this.setupTest({
+                player1: {
+                    house: 'staralliance',
+                    inPlay: ['kartanoo', 'sample-42-c'],
+                    discard: ['animating-force', 'boo', 'haunting-deck']
+                },
+                player2: {
+                    house: 'untamed',
+                    inPlay: ['cauldron'],
+                    discard: ['animating-force', 'curiosity']
+                }
+            });
+        });
+
+        it("plays cards from p1's deck", function () {
+            const animatingForceP1 = this.player1.findCardByName('animating-force', 'discard');
+
+            this.player1.moveCard(this.boo, 'deck');
+            this.player1.reap(this.kartanoo);
+            this.player1.clickCard(this.cauldron);
+            this.player1.endTurn();
+            this.player2.clickPrompt('untamed');
+            this.player2.endTurn();
+            this.player1.clickPrompt('staralliance');
+            this.player1.moveCard(animatingForceP1, 'deck');
+            this.player1.reap(this.kartanoo);
+            this.player1.clickCard(this.cauldron);
+            this.player1.endTurn();
+            this.player2.clickPrompt('untamed');
+            this.player2.endTurn();
+            this.player1.clickPrompt('staralliance');
+            this.player1.moveCard(this.hauntingDeck, 'deck');
+            this.player1.reap(this.kartanoo);
+            this.player1.clickCard(this.cauldron);
+            this.player1.clickCard(this.animatingForce);
+            this.player1.clickCard(this.sample42C);
+            this.player1.clickPrompt('Left');
+            expect(this.sample42C.location).toBe('play area');
+            expect(this.sample42C.controller).toBe(this.player1.player);
+            expect(this.sample42C.power).toBe(4);
+        });
+
+        it("plays cards from p2's deck", function () {
+            const animatingForceP2 = this.player2.findCardByName('animating-force', 'discard');
+
+            this.player1.endTurn();
+
+            this.player2.clickPrompt('untamed');
+            this.player2.moveCard(animatingForceP2, 'deck');
+            this.player2.useOmni(this.cauldron);
+            this.player2.endTurn();
+
+            this.player1.clickPrompt('staralliance');
+            this.player1.endTurn();
+
+            this.player2.clickPrompt('untamed');
+            this.player2.moveCard(this.curiosity, 'deck');
+            this.player2.useOmni(this.cauldron);
+            this.player2.endTurn();
+
+            this.player1.clickPrompt('staralliance');
+            this.player1.moveCard(this.hauntingDeck, 'deck');
+            this.player1.reap(this.kartanoo);
+            this.player1.clickCard(this.cauldron);
+            this.player1.clickCard(animatingForceP2);
+            this.player1.clickCard(this.sample42C);
+            this.player1.clickPrompt('Left');
+            expect(this.sample42C.location).toBe('play area');
+            expect(this.sample42C.power).toBe(4);
+        });
+    });
 });
