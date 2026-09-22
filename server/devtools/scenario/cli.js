@@ -3,6 +3,7 @@
  * Interactive scenario picker.
  *
  *   npm run dev:scenario
+ *   npm run dev:scenario -- "puzzles/"   # restrict to a subdirectory
  *
  * Two pickers (file → test) with VSCode-style subsequence filtering, then it
  * spawns `npm run dev:gamenode` with the right SCENARIO env var. Esc
@@ -565,7 +566,15 @@ function runGamenode(scenarioArg) {
 }
 
 async function main() {
-    const files = collectFiles();
+    // Optional positional arg: restrict to a subdirectory or path fragment.
+    // Usage: npm run dev:scenario "puzzles/"
+    const filterArg = process.argv[2] || '';
+
+    let files = collectFiles();
+    if (filterArg) {
+        const normalised = filterArg.replace(/\\/g, '/');
+        files = files.filter((f) => f.display.includes(normalised));
+    }
     if (files.length === 0) {
         console.error('No scenarios or spec files found');
         process.exit(1);
