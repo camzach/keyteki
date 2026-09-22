@@ -57,7 +57,7 @@ services:
         ports:
             - '54320:5432'
         volumes:
-            - postgres:/data/postgres
+            - postgres:/var/lib/postgresql
             - ./server/db/schema:/docker-entrypoint-initdb.d
         restart: unless-stopped
     redis:

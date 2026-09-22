@@ -253,7 +253,9 @@ class PendingGame {
 
     // interrogators
     isEmpty() {
-        return !this.getPlayersAndSpectators().some((player) => this.hasActivePlayer(player.name));
+        return !Object.values(this.getPlayersAndSpectators()).some((player) =>
+            this.hasActivePlayer(player.name)
+        );
     }
 
     isOwner(playerName) {
@@ -320,7 +322,10 @@ class PendingGame {
                     status: player.deck.status
                 };
             } else if (player.deck) {
-                deck = { selected: player.deck.selected, status: player.deck.status };
+                deck = {
+                    selected: player.deck.selected,
+                    status: player.deck.status
+                };
             } else {
                 deck = {};
             }
