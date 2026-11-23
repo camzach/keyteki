@@ -13,6 +13,32 @@ const ZONES = ['inPlay', 'hand', 'deck', 'discard', 'purged', 'archives'];
 const isObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
 /**
+ * Reads the scenario code from a URL query string (`?code=...`).
+ *
+ * A literal `+` in standard base64 arrives as a space once the query string is
+ * parsed, so spaces are turned back into `+`.
+ *
+ * @param {string} search e.g. `location.search`
+ * @returns {string} the code, or an empty string when there is none
+ */
+export function codeFromSearch(search) {
+    return (new URLSearchParams(search).get('code') || '').trim().replace(/ /g, '+');
+}
+
+/**
+ * Accepts a scenario code or a whole puzzle link and returns the code.
+ *
+ * @param {string} input
+ * @returns {string}
+ */
+export function codeFromInput(input) {
+    const text = (input || '').trim();
+    const match = /^https?:\/\/\S*[?&]code=/i.test(text) ? text.indexOf('?') : -1;
+
+    return match === -1 ? text : codeFromSearch(text.slice(match).split('#')[0]);
+}
+
+/**
  * @param {string} code
  * @returns {object} the parsed scenario
  * @throws {Error} when the code is not a scenario

@@ -1,11 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, TextArea } from '@heroui/react';
 
 import AlertPanel from '../Components/Site/AlertPanel';
 import Panel from '../Components/Site/Panel';
-import { decodeScenarioCode, summarizeScenario } from '../scenario/payload';
+import {
+    codeFromInput,
+    codeFromSearch,
+    decodeScenarioCode,
+    summarizeScenario
+} from '../scenario/payload';
 import { lobbyActions } from '../redux/slices/lobbySlice';
 import { sendMessage } from '../redux/socketActions';
 
@@ -44,12 +49,18 @@ PlayerSummary.displayName = 'PlayerSummary';
 const Scenario = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const currentGame = useSelector((state) => state.lobby.currentGame);
     const gameError = useSelector((state) => state.lobby.gameError);
     const connected = useSelector((state) => state.lobby.connected);
 
-    const [code, setCode] = useState('');
+    // A link such as /?code=<scenario code> starts the puzzle straight away.
+    const [code, setCode] = useState(() => codeFromSearch(location.search));
+    const [fromLink, setFromLink] = useState(() => code.trim().length > 0);
     const [isLaunching, setIsLaunching] = useState(false);
+    // The game the user was already in when the link launched; it must not pull them to /play.
+    const staleGameId = useRef();
+    const launchedFromLink = useRef(false);
 
     const { summary, error } = useMemo(() => {
         if (code.trim().length === 0) {
@@ -64,7 +75,7 @@ const Scenario = () => {
     }, [code]);
 
     useEffect(() => {
-        if (currentGame?.started) {
+        if (currentGame?.started && currentGame.id !== staleGameId.current) {
             navigate('/play', { replace: true });
         }
     }, [currentGame, navigate]);
@@ -72,6 +83,7 @@ const Scenario = () => {
     useEffect(() => {
         if (gameError) {
             setIsLaunching(false);
+            setFromLink(false);
         }
     }, [gameError]);
 
@@ -82,6 +94,31 @@ const Scenario = () => {
         dispatch(lobbyActions.clearGameError());
         dispatch(sendMessage('createscenariogame', code.trim()));
     };
+
+    useEffect(() => {
+        if (!fromLink) {
+            return;
+        }
+
+        if (error) {
+            setFromLink(false);
+        } else if (summary && connected && !launchedFromLink.current) {
+            launchedFromLink.current = true;
+            staleGameId.current = currentGame?.id;
+            launch();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fromLink, summary, error, connected]);
+
+    if (fromLink) {
+        return (
+            <div className='mx-auto w-full max-w-5xl'>
+                <Panel title={summary?.title || 'Puzzle'}>
+                    <p className='text-center'>Starting puzzle…</p>
+                </Panel>
+            </div>
+        );
+    }
 
     return (
         <div className='mx-auto w-full max-w-5xl'>
@@ -95,7 +132,7 @@ const Scenario = () => {
                     rows={5}
                     value={code}
                     placeholder='Paste a scenario code'
-                    onChange={(event) => setCode(event.target.value)}
+                    onChange={(event) => setCode(codeFromInput(event.target.value))}
                 />
 
                 {error && <AlertPanel type='warning' className='mt-3' message={error} />}

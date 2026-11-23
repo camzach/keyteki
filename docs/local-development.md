@@ -47,8 +47,14 @@ The board works without images, but cards show as blanks.
 Open the site, paste a base64 (or URL-safe base64) scenario code, review the
 preview, and click **Launch Scenario**. The server decodes and validates the
 code, builds the board, and the player joins the game immediately as the
-active player. The
-opponent is an inert placeholder (`Puzzle Opponent`), so puzzles must be
+active player.
+
+A scenario code can also be passed in a link, e.g. `http://localhost:4000/?code=<code>`.
+The puzzle starts immediately, without showing the code. If the code is invalid, the page
+falls back to the form with the error. URL-safe codes (the default export) need no
+escaping; for standard base64, percent-encode the code (`+` as `%2B`).
+
+The opponent is an inert placeholder (`Puzzle Opponent`), so puzzles must be
 solvable within the creator's turn. Puzzle games are private, never recorded, and
 cannot be rematched.
 A puzzle is solved when its `goal` is met (by default: forging a key beyond those

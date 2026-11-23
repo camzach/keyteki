@@ -94,11 +94,22 @@ const Application = () => {
                                     currentGame?.started ? (
                                         <GameBoard />
                                     ) : (
-                                        <Navigate to='/' replace />
+                                        <Navigate
+                                            to={{ pathname: '/', search: location.search }}
+                                            replace
+                                        />
                                     )
                                 }
                             />
-                            <Route path='*' element={<Navigate to='/' replace />} />
+                            <Route
+                                path='*'
+                                element={
+                                    <Navigate
+                                        to={{ pathname: '/', search: location.search }}
+                                        replace
+                                    />
+                                }
+                            />
                         </Routes>
                     </ErrorBoundary>
                 </div>

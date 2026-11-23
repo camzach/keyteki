@@ -70,4 +70,54 @@ describe('client scenario payload module', function () {
         ]);
         expect(summary.player2.inPlay).toEqual([{ card: 'gub', details: [] }]);
     });
+
+    describe('codeFromSearch', function () {
+        beforeEach(function () {
+            // '>>>' encodes to 'Pj4+', so the standard alphabet contains a '+'.
+            this.code = encodeScenario({ title: '>>>>>>>>>>>>', player1: {} }, { urlSafe: false });
+            expect(this.code).toContain('+');
+        });
+
+        it('reads the code from the query string', function () {
+            const urlSafe = encodeScenario({ title: 'Linked' }, { urlSafe: true });
+
+            expect(this.client.codeFromSearch(`?code=${urlSafe}`)).toBe(urlSafe);
+        });
+
+        it('keeps a literal + that the query parser turned into a space', function () {
+            expect(this.client.codeFromSearch(`?code=${this.code}`)).toBe(this.code);
+        });
+
+        it('reads a percent-encoded code', function () {
+            const search = `?code=${encodeURIComponent(this.code)}&other=1`;
+
+            expect(this.client.codeFromSearch(search)).toBe(this.code);
+        });
+
+        it('decodes what it reads', function () {
+            const code = this.client.codeFromSearch(`?code=${this.code}`);
+
+            expect(this.client.decodeScenarioCode(code).title).toBe('>>>>>>>>>>>>');
+        });
+
+        it('returns an empty string when there is no code', function () {
+            expect(this.client.codeFromSearch('')).toBe('');
+            expect(this.client.codeFromSearch('?other=1')).toBe('');
+        });
+    });
+
+    describe('codeFromInput', function () {
+        it('returns a plain code unchanged', function () {
+            expect(this.client.codeFromInput('  abc_-123 ')).toBe('abc_-123');
+        });
+
+        it('extracts the code from a pasted puzzle link', function () {
+            expect(this.client.codeFromInput('https://example.fly.dev/play?code=abc_-123')).toBe(
+                'abc_-123'
+            );
+            expect(this.client.codeFromInput('https://example.fly.dev/?x=1&code=abc#top')).toBe(
+                'abc'
+            );
+        });
+    });
 });
