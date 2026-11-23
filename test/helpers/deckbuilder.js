@@ -73,16 +73,37 @@ class DeckBuilder {
 
         let houses = [];
         for (let label of deck) {
-            let card = this.getCard(label);
-            if (!houses.includes(card.house.toLowerCase())) {
-                houses.push(card.house.toLowerCase());
+            let house = this.getCard(label).house.toLowerCase();
+            if (!houses.includes(house)) {
+                houses.push(house);
+            }
+        }
+
+        if (houses.length > 3) {
+            // An upgrade from a fourth house can still be attached in setup.
+            let cards = deck.map((label) => this.getCard(label));
+            houses = [];
+            for (let card of cards.filter((c) => c.type !== 'upgrade')) {
+                let house = card.house.toLowerCase();
+                if (!houses.includes(house)) {
+                    houses.push(house);
+                }
+            }
+
+            if (houses.length > 3) {
+                throw new Error('More than 3 houses present');
+            }
+
+            for (let card of cards.filter((c) => c.type === 'upgrade')) {
+                let house = card.house.toLowerCase();
+                if (houses.length < 3 && !houses.includes(house)) {
+                    houses.push(house);
+                }
             }
         }
 
         let missingHouses = 3 - houses.length;
-        if (missingHouses < 0) {
-            throw new Error('More than 3 houses present');
-        } else if (missingHouses > 0) {
+        if (missingHouses > 0) {
             houses = houses.concat(
                 fillerHouses.filter((h) => !houses.includes(h)).slice(0, missingHouses)
             );
