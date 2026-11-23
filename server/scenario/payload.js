@@ -24,7 +24,7 @@
  *         { "card": "cauldron", "under": ["refit"] }  // faceup cards under it, same owner
  *       ],
  *       "hand": ["encounter-suit"],
- *       "deck": ["animating-force"],     // listed cards sit on top, in order
+ *       "deck": ["animating-force"],     // the whole draw pile, top first (no filler added)
  *       "discard": [],                   // first entry is the top of the pile
  *       "purged": [],
  *       "archives": []

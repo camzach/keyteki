@@ -119,6 +119,11 @@ function applyBoardDetails(wrapper, side = {}) {
     for (const card of [...deckCards].reverse()) {
         wrapper.moveCard(card, 'deck');
     }
+
+    // The test deck builder pads decks with filler; only the listed cards stay.
+    for (const card of wrapper.player.deck.slice(deckCards.length)) {
+        wrapper.player.removeCardFromPile(card);
+    }
 }
 
 function resolveArg(arg, actor, other) {

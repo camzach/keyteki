@@ -115,6 +115,17 @@ describe('buildScenarioGame', function () {
             expect(this.player.hand).toHaveLength(0);
         });
 
+        it('does not pad decks with filler cards', function () {
+            expect(this.player.deck.map((card) => card.id)).toEqual(['bumpsy', 'ancient-bear']);
+            expect(this.opponent.deck).toHaveLength(0);
+        });
+
+        it('can end the turn with empty decks', function () {
+            const wrapper = new PlayerInteractionWrapper(this.game, this.player);
+
+            expect(() => wrapper.endTurn()).not.toThrow();
+        });
+
         it('runs the scripted setup actions', function () {
             expect(this.player.discard[0].id).toBe('anger');
         });

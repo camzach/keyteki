@@ -110,7 +110,7 @@ A scenario is compact JSON using the same vocabulary as `setupTest`
 ```
 
 -   Cards are referenced by id or exact name. `player1` is the creator.
--   `deck` lists the cards on top of the deck, in order; the remainder is filler.
+-   `deck` lists the whole draw pile, top card first. Nothing is added, so an omitted `deck` means an empty draw pile (the exporter drops the filler `setupTest` pads decks with).
     `discard` and `purged` list the top of the pile first.
 -   `tokens` are absolute counts (they replace printed values such as armor).
 -   `goal` is an optional list (or single object) of conditions that must all hold

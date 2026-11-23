@@ -182,4 +182,6 @@ class DeckBuilder {
     }
 }
 
+DeckBuilder.defaultFiller = defaultFiller;
+
 module.exports = DeckBuilder;

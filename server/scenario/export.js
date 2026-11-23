@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const DeckBuilder = require('../../test/helpers/deckbuilder.js');
 const { encodeScenario, SCENARIO_VERSION, validateScenario } = require('./payload.js');
 
 const SETUP_FIELDS = [
@@ -70,6 +71,20 @@ function snapshotInPlayCard(card, player) {
     return entry;
 }
 
+const FILLER_IDS = new Set(Object.values(DeckBuilder.defaultFiller));
+
+// `setupTest` pads every deck with filler cards, and specs that end turns draw
+// them into hands; they are not part of the puzzle.
+function withoutTrailingFiller(cards) {
+    const ids = cards.map(cardId);
+
+    while (ids.length > 0 && FILLER_IDS.has(ids[ids.length - 1])) {
+        ids.pop();
+    }
+
+    return ids;
+}
+
 function snapshotPlayer(player, { includeHouse }) {
     const snapshot = {
         houses: [...player.houses],
@@ -77,8 +92,8 @@ function snapshotPlayer(player, { includeHouse }) {
         chains: player.chains,
         keys: { ...player.keys },
         inPlay: player.cardsInPlay.map((card) => snapshotInPlayCard(card, player)),
-        hand: player.hand.map(cardId),
-        deck: player.deck.map(cardId),
+        hand: withoutTrailingFiller(player.hand),
+        deck: withoutTrailingFiller(player.deck),
         discard: player.discard.map(cardId),
         purged: player.purged.map(cardId),
         archives: player.archives.map(cardId)
