@@ -165,16 +165,47 @@ function validateScenarioOrThrow(scenario) {
     return result.scenario;
 }
 
+/**
+ * Reads a `// Label: text` field from a spec's header comment. The text may
+ * continue on following `//` lines, until a blank `//` line or the next field.
+ */
+function readCommentField(lines, label) {
+    const start = lines.findIndex((line) => line.startsWith(`// ${label}:`));
+    if (start === -1) {
+        return undefined;
+    }
+
+    const parts = [lines[start].slice(`// ${label}:`.length).trim()];
+    for (const line of lines.slice(start + 1)) {
+        const text = line.replace(/^\/\/\s?/, '').trim();
+        if (!line.startsWith('//') || text === '' || /^[A-Z][A-Za-z ]{0,30}:(\s|$)/.test(text)) {
+            break;
+        }
+
+        parts.push(text);
+    }
+
+    return parts.join(' ').trim();
+}
+
 function metaFromSpecSource(specPath) {
-    const source = fs.readFileSync(specPath, 'utf8');
+    const lines = fs.readFileSync(specPath, 'utf8').split('\n');
     const meta = {};
 
-    const title = source.match(/^\/\/ Puzzle:\s*(.+)$/m);
-    const objective = source.match(/^\/\/ Objective:\s*(.+)$/m);
+    const title = readCommentField(lines, 'Puzzle');
+    const objective = readCommentField(lines, 'Objective');
+    const goal = readCommentField(lines, 'Goal');
 
-    meta.title = title ? title[1].trim() : path.basename(specPath).replace(/\.spec\.js$/, '');
+    meta.title = title || path.basename(specPath).replace(/\.spec\.js$/, '');
     if (objective) {
-        meta.description = objective[1].trim();
+        meta.description = objective;
+    }
+    if (goal) {
+        try {
+            meta.goal = JSON.parse(goal);
+        } catch (err) {
+            throw new Error(`${specPath}: the "// Goal:" comment is not valid JSON`);
+        }
     }
 
     return meta;
