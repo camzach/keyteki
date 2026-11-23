@@ -24,9 +24,6 @@ keyteki-json-data
 server/game/partialcards
 server/game/generatedcards
 
-# Sentry Config File
-.env.sentry-build-plugin
-
 bin/
 obj/
 .env.development

@@ -1,25 +1,12 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig(({ mode }) => ({
     plugins: [
         react({
             jsxRuntime: 'classic'
-        }),
-        ...(process.env.SENTRY_AUTH_TOKEN
-            ? [
-                  sentryVitePlugin({
-                      authToken: process.env.SENTRY_AUTH_TOKEN,
-                      release: {
-                          name: process.env.VITE_VERSION || process.env.VERSION || 'Local build'
-                      },
-                      org: 'throneteki',
-                      project: 'keyteki'
-                  })
-              ]
-            : [])
+        })
     ],
     resolve: {
         mainFields: ['browser', 'module', 'main'],
