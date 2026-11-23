@@ -609,16 +609,6 @@ class Game extends EventEmitter {
             return;
         }
 
-        if (this.puzzle && this.puzzleGoal) {
-            if (isGoalMet(this, this.puzzleGoal)) {
-                this.recordWinner(
-                    this.getPlayerByName(this.puzzleGoal.playerNames[0]),
-                    'puzzle solved'
-                );
-                return;
-            }
-        }
-
         for (const player of this.getPlayers()) {
             if (Object.values(player.keys).every((key) => key)) {
                 this.recordWinner(player, 'keys');
@@ -632,6 +622,22 @@ class Game extends EventEmitter {
             ) {
                 this.checkTimeWinCondition();
             }
+        }
+    }
+
+    /**
+     * Declares a puzzle solved once its goal holds. Only called when the game
+     * has settled and the creator is back at the main action window, so
+     * the win never interrupts the resolution of an ability.
+     */
+    checkPuzzleGoal() {
+        if (this.winner || !this.puzzle || !this.puzzleGoal) {
+            return;
+        }
+
+        const creator = this.getPlayerByName(this.puzzleGoal.playerNames[0]);
+        if (this.activePlayer === creator && isGoalMet(this, this.puzzleGoal)) {
+            this.recordWinner(creator, 'puzzle solved');
         }
     }
 

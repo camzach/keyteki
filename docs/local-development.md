@@ -58,8 +58,9 @@ The opponent is an inert placeholder (`Puzzle Opponent`), so puzzles must be
 solvable within the creator's turn. Puzzle games are private, never recorded, and
 cannot be rematched.
 A puzzle is solved when its `goal` is met (by default: forging a key beyond those
-already forged at the start); a "Congrats!" prompt appears and **Continue
-Playing** dismisses it.
+already forged at the start). The check runs only once everything has resolved and
+you are back at the main action prompt, then a "Congrats!" prompt appears and
+**Continue Playing** dismisses it.
 Type `/restart` in the game chat to reset the board to its starting position.
 It works without manual mode and only in puzzle games; the game id and
 connections are kept.

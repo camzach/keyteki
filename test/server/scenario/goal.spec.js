@@ -88,10 +88,12 @@ describe('scenario goal in a game', function () {
 
         this.player.keys.red = true;
         this.game.checkGameState(true);
+        this.game.continue();
         expect(this.game.winner).toBeUndefined();
 
         this.player.amber = 8;
         this.game.checkGameState(true);
+        this.game.continue();
         expect(this.game.winner).toBe(this.player);
         expect(this.game.winReason).toBe('puzzle solved');
     });
@@ -99,10 +101,12 @@ describe('scenario goal in a game', function () {
     it('is solved by a card location goal for the opponent', function () {
         start(this, [{ type: 'card', card: 'gub', location: 'discard', player: 2 }]);
         this.game.checkGameState(true);
+        this.game.continue();
         expect(this.game.winner).toBeUndefined();
 
         this.opponent.moveCard(this.opponent.cardsInPlay[0], 'discard');
         this.game.checkGameState(true);
+        this.game.continue();
 
         expect(this.game.winner).toBe(this.player);
     });
@@ -113,6 +117,7 @@ describe('scenario goal in a game', function () {
 
         this.opponent.moveCard(this.opponent.cardsInPlay[0], 'discard');
         this.game.checkGameState(true);
+        this.game.continue();
 
         expect(this.game.winner).toBe(this.player);
     });
@@ -125,11 +130,29 @@ describe('scenario goal in a game', function () {
 
         this.player.amber = 5;
         this.game.checkGameState(true);
+        this.game.continue();
         expect(this.game.winner).toBeUndefined();
 
         this.player.keys.red = true;
         this.game.checkGameState(true);
+        this.game.continue();
         expect(this.game.winner).toBe(this.player);
+    });
+
+    it('waits for the game to settle before declaring the puzzle solved', function () {
+        start(this, [{ type: 'amber', min: 8 }]);
+
+        // A resolution is under way: the goal is met but the player cannot act yet.
+        this.game.queueSimpleStep(() => {
+            this.player.amber = 8;
+            this.game.checkGameState(true);
+            expect(this.game.winner).toBeUndefined();
+        });
+        this.game.queueSimpleStep(() => expect(this.game.winner).toBeUndefined());
+        this.game.continue();
+
+        expect(this.game.winner).toBe(this.player);
+        expect(this.player.currentPrompt().promptTitle).toBe('Puzzle Solved');
     });
 
     it('announces an explicit goal in the game log', function () {

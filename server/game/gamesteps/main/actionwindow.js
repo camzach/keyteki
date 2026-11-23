@@ -123,6 +123,15 @@ class ActionWindow extends UiPrompt {
         }
     }
 
+    continue() {
+        if (!this.isComplete()) {
+            // A puzzle is only solved once everything has resolved and the player can act.
+            this.game.checkPuzzleGoal();
+        }
+
+        return super.continue();
+    }
+
     activePrompt() {
         let buttons = [{ text: 'End Turn', arg: 'done' }];
 
