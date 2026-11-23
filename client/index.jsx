@@ -8,7 +8,6 @@ import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { Toast } from '@heroui/react';
 import configureStore from './configureStore.rtk';
-import * as Sentry from '@sentry/react';
 import { DndProvider } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
@@ -18,51 +17,11 @@ import ErrorBoundary from './Components/Site/ErrorBoundary';
 import './i18n';
 
 const isProd = import.meta.env.PROD;
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
-
-if (isProd && sentryDsn) {
-    const sentryOptions = {
-        dsn: sentryDsn,
-        denyUrls: [
-            /graph\.facebook\.com/i,
-            /connect\.facebook\.net\/en_US\/all\.js/i,
-            /eatdifferent\.com\.woopra-ns\.com/i,
-            /static\.woopra\.com\/js\/woopra\.js/i,
-            /extensions\//i,
-            /^chrome:\/\//i,
-            /chrome-extension:/i,
-            /127\.0\.0\.1:4001\/isrunning/i,
-            /webappstoolbarba\.texthelp\.com\//i,
-            /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
-            /YoukuAntiAds\.eval/i
-        ],
-        beforeSend(event, hint) {
-            if (
-                event.message &&
-                event.message.startsWith('Non-Error exception captured') &&
-                hint.originalException.error
-            ) {
-                Sentry.withScope((scope) => {
-                    scope.setExtra('nonErrorException', true);
-                    Sentry.captureException(hint.originalException.error);
-                });
-                return null;
-            }
-
-            return event;
-        },
-        release: import.meta.env.VITE_VERSION || 'Local build',
-        environment: import.meta.env.MODE
-    };
-
-    Sentry.init(sentryOptions);
-}
-
 let ApplicationComponent = Application;
 let root;
 let store;
 
-const THEME_STORAGE_KEY = 'keyteki-theme';
+const THEME_STORAGE_KEY = 'puzzle-theme';
 
 const applyTheme = (theme) => {
     const resolvedTheme = theme === 'light' ? 'light' : 'dark';
@@ -110,7 +69,7 @@ const render = async () => {
     const content = isProd ? (
         <ErrorBoundary
             message={
-                "We're sorry, a critical error has occured in the client and we're unable to show you anything.  Please try refreshing your browser after filling out a report."
+                "We're sorry, a critical error has occured in the client and we're unable to show you anything. Please try refreshing your browser."
             }
         >
             <App />

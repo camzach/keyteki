@@ -1,21 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { Constants } from './constants';
 import ErrorBoundary from './Components/Site/ErrorBoundary';
-import Navigation from './Components/Navigation/Navigation';
-import AppRoutes from './AppRoutes';
-import { tryParseJSON } from './util.jsx';
-import AlertPanel from './Components/Site/AlertPanel';
-import { setAuthTokens } from './redux/slices/authSlice';
-import {
-    useGetCardsQuery,
-    useGetFactionsQuery,
-    useGetStandaloneDecksQuery,
-    useVerifyAuthenticationMutation
-} from './redux/api';
-import { lobbyAuthenticateRequested, lobbyConnectRequested } from './redux/socketActions';
+import GameBoard from './Components/GameBoard/GameBoard.jsx';
+import Header from './Components/Header';
+import Scenario from './pages/Scenario';
+import { useGetCardsQuery, useGetFactionsQuery } from './redux/api';
+import { connectRequested } from './redux/socketActions';
 import { lobbyActions } from './redux/slices/lobbySlice';
 
 import Background from './assets/img/bgs/keyforge.png';
@@ -25,15 +18,10 @@ import MassMutationBg from './assets/img/bgs/massmutation.png';
 const Application = () => {
     const dispatch = useDispatch();
     const location = useLocation();
-    const navigate = useNavigate();
     const bgRef = useRef(null);
-    const [incompatibleBrowser, setIncompatibleBrowser] = useState(false);
-    const [cannotLoad, setCannotLoad] = useState(false);
-    const prevWindowBlurred = useRef(null);
 
     const currentGame = useSelector((state) => state.lobby.currentGame);
     const user = useSelector((state) => state.account.user);
-    const windowBlurred = useSelector((state) => state.lobby.windowBlurred);
 
     const backgrounds = useMemo(() => {
         const values = { blank: BlankBg };
@@ -48,43 +36,16 @@ const Application = () => {
         return values;
     }, []);
 
-    const [verifyAuthentication] = useVerifyAuthenticationMutation();
     useGetCardsQuery();
     useGetFactionsQuery();
-    useGetStandaloneDecksQuery();
 
     useEffect(() => {
-        if (!localStorage) {
-            setIncompatibleBrowser(true);
-        } else {
-            try {
-                let token = localStorage.getItem('token');
-                let refreshToken = localStorage.getItem('refreshToken');
-                if (refreshToken) {
-                    const parsedToken = tryParseJSON(refreshToken);
-                    if (parsedToken) {
-                        dispatch(setAuthTokens({ token, refreshToken: parsedToken }));
-                        verifyAuthentication()
-                            .unwrap()
-                            .then(() => {
-                                dispatch(lobbyAuthenticateRequested());
-                            })
-                            .catch(() => {});
-                    }
-                }
-            } catch (error) {
-                setCannotLoad(true);
-            }
-        }
-
-        dispatch(lobbyConnectRequested());
+        dispatch(connectRequested());
 
         const onFocusChange = (event) => {
-            if (event.type === 'blur') {
-                dispatch(lobbyActions.windowBlur());
-            } else {
-                dispatch(lobbyActions.windowFocus());
-            }
+            dispatch(
+                event.type === 'blur' ? lobbyActions.windowBlur() : lobbyActions.windowFocus()
+            );
         };
 
         window.addEventListener('focus', onFocusChange);
@@ -94,62 +55,10 @@ const Application = () => {
             window.removeEventListener('focus', onFocusChange);
             window.removeEventListener('blur', onFocusChange);
         };
-    }, [dispatch, verifyAuthentication]);
-
-    const blinkTab = useCallback(() => {
-        if (!currentGame || !currentGame.players) {
-            return;
-        }
-
-        if (Object.keys(currentGame.players).length < 2) {
-            return;
-        }
-
-        const activePlayer = Object.values(currentGame.players).find((x) => x.activePlayer);
-        if (
-            document.title !== 'Alert!' &&
-            activePlayer &&
-            user &&
-            activePlayer.name === user.username
-        ) {
-            let oldTitle = document.title;
-            let msg = 'Alert!';
-            let timeoutId = false;
-
-            let blink = function () {
-                document.title = document.title === msg ? oldTitle : msg;
-
-                if (document.hasFocus()) {
-                    document.title = oldTitle;
-                    clearInterval(timeoutId);
-                }
-            };
-
-            if (!timeoutId) {
-                timeoutId = setInterval(blink, 500);
-            }
-        }
-    }, [currentGame, user]);
-
-    useEffect(() => {
-        const previous = prevWindowBlurred.current;
-        if (previous === null || !previous || windowBlurred) {
-            blinkTab();
-        }
-        prevWindowBlurred.current = windowBlurred;
-    }, [blinkTab, windowBlurred]);
+    }, [dispatch]);
 
     const path = location?.pathname || '/';
     const gameBoardVisible = currentGame && currentGame.started && path === '/play';
-
-    // Scenario dev mode: the gamenode auto-joins test0/test1 to a game on
-    // startup and on `r` reset. Bounce the client to /play so they don't have
-    // to manually refresh from the lobby.
-    useEffect(() => {
-        if (currentGame && currentGame.scenario && path !== '/play') {
-            navigate('/play', { replace: true });
-        }
-    }, [currentGame, navigate, path]);
 
     useEffect(() => {
         if (!bgRef.current) {
@@ -157,59 +66,42 @@ const Application = () => {
         }
 
         if (gameBoardVisible && user && user.settings) {
-            let background = 'keyforge';
-            let houseIndex = Constants.HousesNames.indexOf(user.settings.background);
-            if (houseIndex === -1) {
-                background = `${user?.settings?.background}`;
-            } else {
-                background = `${Constants.Houses[houseIndex]}`;
-            }
+            const houseIndex = Constants.HousesNames.indexOf(user.settings.background);
+            const background =
+                houseIndex === -1 ? `${user.settings.background}` : Constants.Houses[houseIndex];
 
-            if (background === 'custom' && user.settings.customBackground) {
-                bgRef.current.style.backgroundImage = `url('/img/bgs/${user.settings.customBackground}.png')`;
-            } else {
-                bgRef.current.style.backgroundImage = `url('${backgrounds[background]}')`;
-            }
+            bgRef.current.style.backgroundImage = `url('${backgrounds[background]}')`;
             return;
         }
 
         bgRef.current.style.backgroundImage = 'none';
     }, [backgrounds, gameBoardVisible, user]);
 
-    let component = <AppRoutes user={user} currentGame={currentGame} />;
-
-    if (incompatibleBrowser) {
-        component = (
-            <AlertPanel
-                type='error'
-                message='Your browser does not provide the required functionality for this site to work.  Please upgrade your browser.  The site works best with a recent version of Chrome, Safari or Firefox.'
-            />
-        );
-    } else if (cannotLoad) {
-        component = (
-            <AlertPanel
-                type='error'
-                message='This site requires the ability to store cookies and local site data to function.  Please enable these features to use the site.'
-            />
-        );
-    }
-
     return (
         <div className='bg' ref={bgRef}>
-            <Navigation appName='The Crucible Online' user={user} />
+            <Header />
             <div className='wrapper'>
                 <div className='mx-auto w-full pt-14 px-3 sm:px-4 lg:max-w-[92vw] lg:px-6 2xl:max-w-screen-2xl'>
                     <ErrorBoundary
-                        navigate={navigate}
                         errorPath={path}
                         message={"We're sorry - something's gone wrong."}
                     >
-                        {component}
+                        <Routes>
+                            <Route path='/' element={<Scenario />} />
+                            <Route
+                                path='/play'
+                                element={
+                                    currentGame?.started ? (
+                                        <GameBoard />
+                                    ) : (
+                                        <Navigate to='/' replace />
+                                    )
+                                }
+                            />
+                            <Route path='*' element={<Navigate to='/' replace />} />
+                        </Routes>
                     </ErrorBoundary>
                 </div>
-            </div>
-            <div className='font-sans' style={{ zIndex: -999 }}>
-                &nbsp;
             </div>
         </div>
     );

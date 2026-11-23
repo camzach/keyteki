@@ -7,7 +7,7 @@ import AlertPanel from '../Components/Site/AlertPanel';
 import Panel from '../Components/Site/Panel';
 import { decodeScenarioCode, summarizeScenario } from '../scenario/payload';
 import { lobbyActions } from '../redux/slices/lobbySlice';
-import { lobbySendMessage } from '../redux/socketActions';
+import { sendMessage } from '../redux/socketActions';
 
 const PlayerSummary = ({ title, summary }) => (
     <div className='min-w-0 flex-1'>
@@ -44,7 +44,6 @@ PlayerSummary.displayName = 'PlayerSummary';
 const Scenario = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const user = useSelector((state) => state.account.user);
     const currentGame = useSelector((state) => state.lobby.currentGame);
     const gameError = useSelector((state) => state.lobby.gameError);
     const connected = useSelector((state) => state.lobby.connected);
@@ -81,7 +80,7 @@ const Scenario = () => {
     const launch = () => {
         setIsLaunching(true);
         dispatch(lobbyActions.clearGameError());
-        dispatch(lobbySendMessage('createscenariogame', code.trim()));
+        dispatch(sendMessage('createscenariogame', code.trim()));
     };
 
     return (
@@ -101,13 +100,6 @@ const Scenario = () => {
 
                 {error && <AlertPanel type='warning' className='mt-3' message={error} />}
                 {gameError && <AlertPanel type='danger' className='mt-3' message={gameError} />}
-                {!user && (
-                    <AlertPanel
-                        type='warning'
-                        className='mt-3'
-                        message='You must be logged in to launch a scenario.'
-                    />
-                )}
 
                 {summary && (
                     <div className='mt-3'>
@@ -141,7 +133,7 @@ const Scenario = () => {
                     <Button
                         type='button'
                         variant='primary'
-                        isDisabled={!summary || !user || !connected}
+                        isDisabled={!summary || !connected}
                         isPending={isLaunching}
                         onClick={launch}
                     >
