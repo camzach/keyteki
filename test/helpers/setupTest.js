@@ -4,7 +4,7 @@ const { cardCamel } = require('./chat-utils.js');
 /**
  * Shared implementation of the `setupTest` helper used by both the vitest
  * integration helper (`integrationhelper.js`) and the scenario runner
- * (`server/devtools/scenario/runner.js`). Keeping the body in one place
+ * (`server/scenario/runner.js`). Keeping the body in one place
  * ensures the two surfaces can't silently drift apart when new player fields
  * or initialisation steps are added.
  *

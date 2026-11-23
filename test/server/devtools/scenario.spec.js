@@ -4,7 +4,7 @@ const {
     inspectScenario,
     loadScenario,
     SCENARIO_BREAK
-} = require('../../../server/devtools/scenario/runner.js');
+} = require('../../../server/scenario/runner.js');
 const logger = require('../../../server/log.js');
 
 const FIXTURE = path.join(__dirname, 'fixtures', 'sample.scenario.js');

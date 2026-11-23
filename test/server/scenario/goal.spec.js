@@ -1,7 +1,5 @@
-const Settings = require('../../../server/settings.js');
 const logger = require('../../../server/log.js');
-const PendingGame = require('../../../server/pendinggame.js');
-const GameServer = require('../../../server/gamenode/gameserver.js');
+const { makePuzzleServer, makeSocket, makeDetails } = require('../../helpers/puzzleserver.js');
 const {
     decodeScenario,
     encodeScenario,
@@ -69,34 +67,14 @@ describe('scenario goal payload', function () {
 
 describe('scenario goal in a game', function () {
     function start(context, goal) {
-        const user = Settings.getUserWithDefaultsSet({
-            username: 'tester',
-            getDetails() {
-                return {
-                    username: 'tester',
-                    settings: this.settings,
-                    permissions: {},
-                    blockList: []
-                };
-            }
-        });
-        const pendingGame = new PendingGame(user, { name: 'x', puzzle: true });
-        pendingGame.newGame('socket-id', user, undefined, true);
+        const socket = makeSocket();
 
-        context.server = {
-            games: {},
-            cardData: undefined,
-            gameSocket: { send: vi.fn() },
-            sendGameState: vi.fn(),
-            gameWon: GameServer.prototype.gameWon
-        };
-        GameServer.prototype.onStartScenario.call(
-            context.server,
-            pendingGame.getStartGameDetails(),
-            validateScenario({ ...baseScenario, goal }).scenario
+        context.server = makePuzzleServer();
+        context.game = context.server.createScenarioGame(
+            validateScenario({ ...baseScenario, goal }).scenario,
+            makeDetails(socket)
         );
-        context.game = context.server.games[pendingGame.id];
-        context.player = context.game.getPlayerByName('tester');
+        context.player = context.game.getPlayerByName(socket.user.username);
         context.opponent = context.game.getPlayerByName('Puzzle Opponent');
     }
 
@@ -184,23 +162,9 @@ describe('scenario goal announcement', function () {
     it('is skipped when the scenario has an objective description', function () {
         const goal = [{ type: 'amber', min: 8 }];
         const { buildScenarioGame } = require('../../../server/scenario/builder.js');
-        const user = Settings.getUserWithDefaultsSet({
-            username: 'tester',
-            getDetails() {
-                return {
-                    username: 'tester',
-                    settings: this.settings,
-                    permissions: {},
-                    blockList: []
-                };
-            }
-        });
-        const pendingGame = new PendingGame(user, { name: 'x', puzzle: true });
-        pendingGame.newGame('socket-id', user, undefined, true);
-
         const game = buildScenarioGame(
             validateScenario({ ...baseScenario, description: 'Gain amber.', goal }).scenario,
-            { router: {}, details: pendingGame.getStartGameDetails() }
+            { router: {}, details: makeDetails(makeSocket()) }
         );
 
         const messages = JSON.stringify(game.gameChat.messages);

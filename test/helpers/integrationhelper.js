@@ -329,7 +329,7 @@ beforeEach(function () {
     }
 
     // `this.scenarioBreak()` is a no-op under vitest. In scenario mode
-    // (loaded via server/devtools/scenario/runner.js), it halts test execution
+    // (loaded via server/scenario/runner.js), it halts test execution
     // at the call site so the dev can interact with the resulting game state.
     this.scenarioBreak = () => {};
 

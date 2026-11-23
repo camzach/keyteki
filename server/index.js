@@ -1,21 +1,11 @@
-const Server = require('./server');
-const Lobby = require('./lobby');
-const UserService = require('./services/UserService');
-const ConfigService = require('./services/ConfigService');
-const configService = new ConfigService();
+const { init, listen } = require('./server');
 
 async function runServer() {
-    let options = { configService: configService };
+    const server = await init({ isDeveloping: process.env.NODE_ENV !== 'production' });
 
-    options.userService = new UserService(options.configService);
+    await listen(server.httpServer, process.env.PORT || 4000);
 
-    let server = new Server(process.env.NODE_ENV !== 'production');
-    let httpServer = await server.init(options);
-    let lobby = new Lobby(httpServer, options);
-
-    await lobby.init();
-
-    server.run();
+    return server;
 }
 
 module.exports = runServer;

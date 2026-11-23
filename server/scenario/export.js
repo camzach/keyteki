@@ -170,7 +170,7 @@ function metaFromSpecSource(specPath) {
  */
 function scenarioFromSpec(specPath, meta = {}) {
     // Loaded lazily: the runner pulls in the whole game engine.
-    const { runScenario } = require('../devtools/scenario/runner.js');
+    const { runScenario } = require('./runner.js');
 
     const rawPath = specPath.split('#')[0];
     const game = runScenario(specPath, {

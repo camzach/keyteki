@@ -12,7 +12,7 @@ const Settings = require('../settings.js');
 const logger = require('../log.js');
 const { describeCondition } = require('./goal.js');
 const { applySetupTest } = require('../../test/helpers/setupTest.js');
-const { buildFlow, cardsByCode, deckBuilder } = require('../devtools/scenario/runner.js');
+const { buildFlow, cardsByCode, deckBuilder } = require('./runner.js');
 
 const OPPONENT_NAME = 'Puzzle Opponent';
 const DEFAULT_EXPANSION = 341;
@@ -222,7 +222,7 @@ function buildScenarioGame(scenario, { router, details, cardData = cardsByCode }
     }
 
     // The placeholder opponent never connects; marking it disconnected lets the
-    // game node clean the game up as soon as the creator leaves.
+    // server clean the game up as soon as the creator leaves.
     game.getPlayerByName(OPPONENT_NAME).disconnectedAt = new Date(0);
     creatorPlayer.lastEventAt = Date.now();
 
