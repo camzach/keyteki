@@ -42,8 +42,10 @@ function snapshotInPlayCard(card, player) {
         throw new Error(`Cannot export "${card.name}": controlled by a player who does not own it`);
     }
 
-    if (card.childCards.length > 0) {
-        throw new Error(`Cannot export "${card.name}": cards placed under it are not supported`);
+    if (card.childCards.some((child) => child.facedown || child.owner !== player)) {
+        throw new Error(
+            `Cannot export "${card.name}": facedown or opponent-owned cards under it are not supported`
+        );
     }
 
     const { damage, ...tokens } = card.tokens;
@@ -60,6 +62,9 @@ function snapshotInPlayCard(card, player) {
     }
     if (card.upgrades.length > 0) {
         entry.upgrades = card.upgrades.map(cardId);
+    }
+    if (card.childCards.length > 0) {
+        entry.under = card.childCards.map(cardId);
     }
 
     return entry;

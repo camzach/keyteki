@@ -29,7 +29,10 @@ function normaliseInPlay(side) {
  */
 function toSetupOptions(side = {}) {
     const entries = normaliseInPlay(side);
-    const upgrades = entries.flatMap((entry) => entry.upgrades || []);
+    const upgrades = entries.flatMap((entry) => [
+        ...(entry.upgrades || []),
+        ...(entry.under || [])
+    ]);
 
     return {
         house: side.house,
@@ -55,6 +58,20 @@ function attachUpgrade(wrapper, upgradeLabel, parent) {
     parent.upgrades.push(upgrade);
     upgrade.parent = parent;
     upgrade.updateEffectContexts();
+    player.checkDeckAfterCardMove(oldTopOfDeck);
+}
+
+function placeUnder(wrapper, label, parent) {
+    const card = wrapper.findCardByName(label, 'deck');
+    const player = wrapper.player;
+    const oldTopOfDeck = player.deck[0];
+
+    player.removeCardFromPile(card);
+    card.controller = parent.controller;
+    card.parent = parent;
+    card.moveTo('under');
+    parent.childCards.push(card);
+    card.updateEffectContexts();
     player.checkDeckAfterCardMove(oldTopOfDeck);
 }
 
@@ -86,6 +103,10 @@ function applyBoardDetails(wrapper, side = {}) {
 
         for (const upgrade of entry.upgrades || []) {
             attachUpgrade(wrapper, upgrade, card);
+        }
+
+        for (const under of entry.under || []) {
+            placeUnder(wrapper, under, card);
         }
     });
 

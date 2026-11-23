@@ -90,7 +90,8 @@ A scenario is compact JSON using the same vocabulary as `setupTest`
                 "damage": 2,
                 "exhausted": true,
                 "upgrades": ["blood-of-titans"]
-            }
+            },
+            { "card": "cauldron", "under": ["refit"] }
         ],
         "hand": ["anger"],
         "deck": ["bumpsy"],
@@ -121,8 +122,9 @@ A scenario is compact JSON using the same vocabulary as `setupTest`
         `discard`, `purged` or `archives`.
 -   `actions` is an optional setup script restricted to an allow-list of
     `PlayerInteractionWrapper` methods (`clickPrompt`, `clickCard`, `moveCard`, ...).
--   Cards placed under other cards (e.g. Cauldron) and token creatures in
-    play cannot be represented yet.
+-   `under` lists faceup cards under an in-play card (e.g. Cauldron). They belong to the
+    same player as the card they are under. Facedown or opponent-owned cards under a
+    card, and token creatures in play, cannot be represented yet.
 
 ## Exporting an existing puzzle
 

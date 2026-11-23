@@ -127,6 +127,27 @@ describe('scenarioFromGame snapshots', function () {
         });
     });
 
+    it('captures cards under a card in play', function () {
+        const player = fakePlayer();
+        player.cardsInPlay.push(
+            fakeCard(player, {
+                id: 'cauldron',
+                childCards: [{ id: 'refit', owner: player, facedown: false }]
+            })
+        );
+
+        expect(exportFake(player).player1.inPlay).toEqual([{ card: 'cauldron', under: ['refit'] }]);
+    });
+
+    it('refuses facedown or opponent-owned cards under a card', function () {
+        const player = fakePlayer();
+        player.cardsInPlay.push(
+            fakeCard(player, { name: 'Cauldron', childCards: [{ id: 'refit', facedown: true }] })
+        );
+
+        expect(() => exportFake(player)).toThrow('Cannot export "Cauldron"');
+    });
+
     it('refuses token creatures in play', function () {
         const player = fakePlayer();
         player.cardsInPlay.push(fakeCard(player, { name: 'Grumpus', isToken: () => true }));

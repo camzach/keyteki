@@ -20,7 +20,8 @@
  *       "inPlay": [
  *         "kartanoo",
  *         { "card": "troll", "tokens": { "amber": 4, "ward": 1 }, "damage": 2,
- *           "exhausted": true, "upgrades": ["friendship"] }
+ *           "exhausted": true, "upgrades": ["friendship"] },
+ *         { "card": "cauldron", "under": ["refit"] }  // faceup cards under it, same owner
  *       ],
  *       "hand": ["encounter-suit"],
  *       "deck": ["animating-force"],     // listed cards sit on top, in order
@@ -51,6 +52,7 @@ const MAX_CARDS_PER_ZONE = 60;
 const MAX_ACTIONS = 200;
 const MAX_ACTION_ARGS = 5;
 const MAX_UPGRADES_PER_CARD = 10;
+const MAX_UNDER_PER_CARD = 10;
 const MAX_STRING_LENGTH = 100;
 const MAX_TITLE_LENGTH = 120;
 const MAX_AUTHOR_LENGTH = 80;
@@ -69,7 +71,7 @@ const TOP_LEVEL_FIELDS = [
     'actions',
     ...PLAYER_KEYS
 ];
-const IN_PLAY_ENTRY_FIELDS = ['card', 'tokens', 'damage', 'exhausted', 'upgrades'];
+const IN_PLAY_ENTRY_FIELDS = ['card', 'tokens', 'damage', 'exhausted', 'upgrades', 'under'];
 
 // Only these PlayerInteractionWrapper methods may be scripted. This is an
 // allow-list so a payload can never reach arbitrary methods on the wrapper.
@@ -152,6 +154,18 @@ function validateCardEntry(entry, zone, path, errors) {
             entry.upgrades.forEach((upgrade, index) => {
                 if (!isCardLabel(upgrade)) {
                     errors.push(`${path}.upgrades[${index}] must be a card id or name`);
+                }
+            });
+        }
+    }
+
+    if (entry.under !== undefined) {
+        if (!Array.isArray(entry.under) || entry.under.length > MAX_UNDER_PER_CARD) {
+            errors.push(`${path}.under must be a list of at most ${MAX_UNDER_PER_CARD} cards`);
+        } else {
+            entry.under.forEach((card, index) => {
+                if (!isCardLabel(card)) {
+                    errors.push(`${path}.under[${index}] must be a card id or name`);
                 }
             });
         }
@@ -398,6 +412,9 @@ function compactPlayer(player = {}) {
             }
             if (entry.upgrades && entry.upgrades.length > 0) {
                 compactEntry.upgrades = [...entry.upgrades];
+            }
+            if (entry.under && entry.under.length > 0) {
+                compactEntry.under = [...entry.under];
             }
 
             // Plain cards collapse back to their label to keep payloads small.

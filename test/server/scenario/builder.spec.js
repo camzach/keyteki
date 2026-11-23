@@ -39,7 +39,7 @@ describe('buildScenarioGame', function () {
                     amber: 3,
                     keys: { red: true },
                     inPlay: [
-                        'keyfrog',
+                        { card: 'keyfrog', under: ['bumpsy', 'ancient-bear'] },
                         {
                             card: 'troll',
                             tokens: { amber: 2, ward: 1 },
@@ -86,6 +86,19 @@ describe('buildScenarioGame', function () {
             expect(this.troll.upgrades.map((card) => card.id)).toEqual(['friendship']);
             expect(this.troll.upgrades[0].parent).toBe(this.troll);
             expect(this.opponent.cardsInPlay.map((card) => card.id)).toEqual(['drecker']);
+        });
+
+        it('places cards faceup under a card in play', function () {
+            const keyfrog = this.player.cardsInPlay.find((card) => card.id === 'keyfrog');
+
+            expect(keyfrog.childCards.map((card) => card.id)).toEqual(['bumpsy', 'ancient-bear']);
+            for (const child of keyfrog.childCards) {
+                expect(child.location).toBe('under');
+                expect(child.parent).toBe(keyfrog);
+                expect(child.owner).toBe(this.player);
+                expect(child.controller).toBe(this.player);
+                expect(this.player.deck).not.toContain(child);
+            }
         });
 
         it('fills the other zones and orders the top of the deck', function () {

@@ -108,6 +108,9 @@ function summarizePlayer(player = {}) {
             if (entry.upgrades?.length) {
                 details.push(`upgrades: ${entry.upgrades.join(', ')}`);
             }
+            if (entry.under?.length) {
+                details.push(`under: ${entry.under.join(', ')}`);
+            }
         }
 
         return { card: cardLabel(entry), details };

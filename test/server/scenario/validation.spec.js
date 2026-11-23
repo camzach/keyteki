@@ -76,6 +76,16 @@ describe('scenario payload validation errors', function () {
             'player1.inPlay[0].upgrades[0]',
             { player1: { inPlay: [{ card: 'troll', upgrades: [3] }] } }
         ],
+        [
+            'under that is not a list',
+            'player1.inPlay[0].under must be a list',
+            { player1: { inPlay: [{ card: 'cauldron', under: 'x' }] } }
+        ],
+        [
+            'an invalid under card',
+            'player1.inPlay[0].under[0]',
+            { player1: { inPlay: [{ card: 'cauldron', under: [3] }] } }
+        ],
         ['actions that are not a list', 'actions must be a list', { actions: 'x' }],
         ['an action that is not an object', 'actions[0] must be an object', { actions: ['x'] }],
         [
