@@ -50,10 +50,9 @@ To implement a card:
 
 ### Testing in the UI
 
--   Start the server: `docker-compose up --build`
+-   Start the server: `npm start`
 -   Visit [http://localhost:4000](http://localhost:4000)
--   Create a game and enter manual mode
--   Add your card: `/add-card Card Name`
+-   Launch a puzzle containing your card (see [Local Development](local-development.md))
 
 ## File Structure
 

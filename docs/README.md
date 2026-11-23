@@ -4,11 +4,10 @@ This folder contains technical documentation for implementing cards and understa
 
 ## Getting Started
 
--   [Local Development](local-development.md) - Setting up your development environment - only necessary for UI, server, or database changes
+-   [Local Development](local-development.md) - Running the puzzle server and the puzzle code format
 -   [Implementing Cards](implementing-cards.md) - General card implementation guidelines
 -   [Testing Cards](testing-cards.md) - How to write tests for cards
 -   [Card Messages](card-messages.md) - How to format game log messages
--   [Adding a New Set](new-sets.md) - Scaffolding required to register a new KeyForge set
 
 ## Game Engine References
 

@@ -804,43 +804,10 @@ Use the following to manually test a card in the game - this is usually only nee
 ### Starting the Server
 
 ```bash
-# Using Docker (simpler, slow to rebuild)
-docker-compose up --build
-
-# Or with hybrid setup (hot reloading)
-npm run dev:db
-npm run dev:lobby
-# In another terminal:
-npm run dev:gamenode
+npm start
 ```
 
-Visit [http://localhost:4000](http://localhost:4000) and log in with test users (`test0`/`test1`, password: `password`).
-
-### Adding Cards to Test
-
--   Create a game and start it
--   Enter manual mode (click the manual mode button or use `/manual`)
--   Add your card to hand:
-
-    ```text
-    /add-card Card Name
-    ```
-
--   Test the card's interactions
-
-### Updating Card Data
-
-If your card doesn't appear or has wrong data:
-
-```bash
-# Docker
-docker compose exec lobby node server/scripts/fetchdata
-
-# Non-Docker
-node server/scripts/fetchdata.js
-```
-
-Restart the server after fetchdata completes.
+Visit [http://localhost:4000](http://localhost:4000) and launch a puzzle that contains the card. Export one from a spec with `npm run scenario:export -- path/to/foo.spec.js` (see [Local Development](local-development.md)).
 
 ## Debugging Tests
 
