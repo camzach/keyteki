@@ -13,6 +13,7 @@
         "dev:lobby": "NODE_APP_INSTANCE=node nodemon --inspect=0.0.0.0:9229 .",
         "dev:gamenode": "NODE_APP_INSTANCE=node nodemon --inspect=0.0.0.0:9229 server/gamenode",
         "dev:scenario": "node server/devtools/scenario/cli.js",
+        "scenario:export": "node server/scenario/export.js",
         "fetchdata": "node server/scripts/fetchdata",
         "game": "node server/gamenode",
         "test": "vitest run",

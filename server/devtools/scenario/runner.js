@@ -174,7 +174,7 @@ function usesSetupTest(test) {
     return sources.some((src) => src.includes('setupTest'));
 }
 
-function loadScenario(scenarioPathInput) {
+function loadScenario(scenarioPathInput, { hooksOnly = false } = {}) {
     // SCENARIO format:  path/to/foo.spec.js[#test name]
     // The fragment is a case-insensitive substring match against the test's
     // full name (joined describe/it labels).
@@ -222,6 +222,9 @@ function loadScenario(scenarioPathInput) {
         for (const hook of chosen.hooks) {
             hook.call(this);
         }
+        if (hooksOnly) {
+            return;
+        }
         const result = chosen.body.call(this);
         if (result && typeof result.then === 'function') {
             logger.warn(
@@ -231,9 +234,9 @@ function loadScenario(scenarioPathInput) {
     };
 }
 
-function buildFlow(game) {
-    const player1 = new PlayerInteractionWrapper(game, game.getPlayerByName(PLAYER_NAMES[0]));
-    const player2 = new PlayerInteractionWrapper(game, game.getPlayerByName(PLAYER_NAMES[1]));
+function buildFlow(game, playerNames = PLAYER_NAMES) {
+    const player1 = new PlayerInteractionWrapper(game, game.getPlayerByName(playerNames[0]));
+    const player2 = new PlayerInteractionWrapper(game, game.getPlayerByName(playerNames[1]));
 
     const flow = {
         game,
@@ -345,14 +348,15 @@ function buildContext(game) {
  * @param {object} options
  * @param {object} options.router - GameServer (or compatible) used as the Game's router
  * @param {string} [options.gameId] - reuse an existing game id (used by /reset)
+ * @param {boolean} [options.hooksOnly] - run only the beforeEach hooks, not the test body
  * @returns {import("../game/game")} the constructed Game
  */
-function runScenario(scenarioPath, { router, gameId } = {}) {
+function runScenario(scenarioPath, { router, gameId, hooksOnly = false } = {}) {
     if (!router) {
         throw new Error('runScenario requires a router');
     }
 
-    const scenarioFn = loadScenario(scenarioPath);
+    const scenarioFn = loadScenario(scenarioPath, { hooksOnly });
     const details = buildGameDetails(gameId || randomUUID());
 
     const game = new Game(details, { router, cardData: cardsByCode });
@@ -390,4 +394,13 @@ function runScenario(scenarioPath, { router, gameId } = {}) {
     return game;
 }
 
-module.exports = { runScenario, inspectScenario, loadScenario, PLAYER_NAMES, SCENARIO_BREAK };
+module.exports = {
+    runScenario,
+    inspectScenario,
+    loadScenario,
+    buildFlow,
+    cardsByCode,
+    deckBuilder,
+    PLAYER_NAMES,
+    SCENARIO_BREAK
+};

@@ -11,6 +11,7 @@ const UserService = require('./services/UserService');
 const ConfigService = require('./services/ConfigService');
 const User = require('./models/User');
 const { sortBy } = require('./Array');
+const { decodeScenario } = require('./scenario/payload');
 
 class Lobby {
     constructor(server, options = {}) {
@@ -30,6 +31,7 @@ class Lobby {
         this.router.on('onGameRematch', this.onGameRematch.bind(this));
         this.router.on('onGameRematchWithNewDecks', this.onGameRematchWithNewDecks.bind(this));
         this.router.on('onPlayerLeft', this.onPlayerLeft.bind(this));
+        this.router.on('onScenarioFailed', this.onScenarioFailed.bind(this));
         this.router.on('onWorkerTimedOut', this.onWorkerTimedOut.bind(this));
         this.router.on('onNodeReconnected', this.onNodeReconnected.bind(this));
         this.router.on('onWorkerStarted', this.onWorkerStarted.bind(this));
@@ -370,6 +372,7 @@ class Lobby {
         socket.registerEvent('chat', this.onPendingGameChat.bind(this));
         socket.registerEvent('clearsessions', this.onClearSessions.bind(this));
         socket.registerEvent('connectfailed', this.onConnectFailed.bind(this));
+        socket.registerEvent('createscenariogame', this.onCreateScenarioGame.bind(this));
         socket.registerEvent('getnodestatus', this.onGetNodeStatus.bind(this));
         socket.registerEvent('getsealeddeck', this.onGetSealedDeck.bind(this));
         socket.registerEvent('joingame', this.onJoinGame.bind(this));
@@ -550,6 +553,51 @@ class Lobby {
 
         this.games[game.id] = game;
         this.broadcastGameMessage('newgame', game);
+    }
+
+    /**
+     * Creates a puzzle game for the user from a base64 scenario code and hands
+     * them off to the game node straight away.
+     */
+    onCreateScenarioGame(socket, code) {
+        if (this.findGameForUser(socket.user.username)) {
+            socket.send(
+                'gameerror',
+                'You are already in a game. Leave it before starting a scenario.'
+            );
+            return;
+        }
+
+        let scenario;
+        try {
+            scenario = decodeScenario(code);
+        } catch (err) {
+            socket.send('gameerror', err.message);
+            return;
+        }
+
+        let game = new PendingGame(socket.user, {
+            name: scenario.title || 'Puzzle',
+            allowSpectators: false,
+            gameFormat: 'normal',
+            gamePrivate: true,
+            gameType: 'casual',
+            puzzle: true
+        });
+        game.newGame(socket.id, socket.user, undefined, true);
+
+        let gameNode = this.router.startScenarioGame(game, scenario);
+        if (!gameNode) {
+            socket.send('gameerror', 'No game nodes available. Try again later.');
+            return;
+        }
+
+        game.node = gameNode;
+        game.started = true;
+        socket.joinChannel(game.id);
+        this.games[game.id] = game;
+
+        this.sendHandoff(socket, gameNode, game.id);
     }
 
     onJoinGame(socket, gameId, password) {
@@ -1175,6 +1223,23 @@ class Lobby {
 
         this.sendGameState(newGame);
         this.broadcastGameMessage('updategame', newGame);
+    }
+
+    onScenarioFailed(gameId, error) {
+        let game = this.games[gameId];
+
+        if (!game) {
+            return;
+        }
+
+        delete this.games[gameId];
+
+        let socket = this.socketsByName[game.owner.username];
+        if (socket) {
+            socket.send('gameerror', `Could not start scenario: ${error}`);
+            socket.send('cleargamestate');
+            socket.leaveChannel(game.id);
+        }
     }
 
     onPlayerLeft(gameId, player) {

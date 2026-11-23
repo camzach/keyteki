@@ -19,6 +19,26 @@ const Socket = require('../socket');
 const ConfigService = require('../services/ConfigService');
 const HealthServer = require('./healthserver.js');
 
+/**
+ * Builds a puzzle game from a scenario and registers it on the server.
+ */
+function createScenarioGame(server, scenario, details) {
+    // Loaded lazily: the builder pulls in the test helpers and card data.
+    const { buildScenarioGame } = require('../scenario/builder.js');
+    const game = buildScenarioGame(scenario, {
+        router: server,
+        details,
+        cardData: server.cardData
+    });
+
+    game.on('onTimeExpired', () => {
+        server.sendGameState(game);
+    });
+    server.games[game.id] = game;
+
+    return game;
+}
+
 class GameServer {
     constructor() {
         this.configService = new ConfigService();
@@ -54,6 +74,7 @@ class GameServer {
             process.env.VERSION || 'Local build'
         );
         this.gameSocket.on('onStartGame', this.onStartGame.bind(this));
+        this.gameSocket.on('onStartScenario', this.onStartScenario.bind(this));
         this.gameSocket.on('onSpectator', this.onSpectator.bind(this));
         this.gameSocket.on('onGameSync', this.onGameSync.bind(this));
         this.gameSocket.on('onFailedConnect', this.onFailedConnect.bind(this));
@@ -342,6 +363,11 @@ class GameServer {
      * @param {import("../game/player")} winner
      */
     gameWon(game, reason, winner) {
+        // Puzzle games are never recorded.
+        if (game.puzzle) {
+            return;
+        }
+
         this.gameSocket.send('GAMEWIN', {
             game: game.getSaveState(),
             winner: winner.name,
@@ -353,7 +379,9 @@ class GameServer {
      * @param {import("../game/game")} game
      */
     rematch(game) {
-        this.gameSocket.send('REMATCH', { game: game.getSaveState() });
+        if (!game.puzzle) {
+            this.gameSocket.send('REMATCH', { game: game.getSaveState() });
+        }
 
         for (let player of Object.values(game.getPlayersAndSpectators())) {
             if (player.left || player.disconnectedAt || !player.socket) {
@@ -366,13 +394,19 @@ class GameServer {
         }
 
         delete this.games[game.id];
+
+        if (game.puzzle) {
+            this.gameSocket.send('GAMECLOSED', { game: game.id });
+        }
     }
 
     /**
      * @param {import("../game/game")} game
      */
     rematchWithNewDecks(game) {
-        this.gameSocket.send('REMATCHWITHNEWDECKS', { game: game.getSaveState() });
+        if (!game.puzzle) {
+            this.gameSocket.send('REMATCHWITHNEWDECKS', { game: game.getSaveState() });
+        }
 
         for (let player of Object.values(game.getPlayersAndSpectators())) {
             if (player.left || player.disconnectedAt || !player.socket) {
@@ -385,6 +419,66 @@ class GameServer {
         }
 
         delete this.games[game.id];
+
+        if (game.puzzle) {
+            this.gameSocket.send('GAMECLOSED', { game: game.id });
+        }
+    }
+
+    /**
+     * Start a puzzle game from a validated scenario payload. The creator's
+     * lobby handoff has already been sent by the lobby.
+     *
+     * @param {import("../pendinggame")} pendingGame
+     * @param {object} scenario
+     */
+    onStartScenario(pendingGame, scenario) {
+        try {
+            createScenarioGame(this, scenario, pendingGame);
+        } catch (err) {
+            logger.error(`Failed to start scenario game ${pendingGame.id}`, err);
+            this.gameSocket.send('SCENARIOFAILED', {
+                gameId: pendingGame.id,
+                error: err.message
+            });
+        }
+    }
+
+    /**
+     * Rebuilds a puzzle game from its original scenario (the `/restart` chat
+     * command), keeping the game id and moving the connected sockets across.
+     *
+     * @param {import("../game/game")} oldGame
+     */
+    restartScenario(oldGame) {
+        let newGame;
+        try {
+            newGame = createScenarioGame(this, oldGame.puzzleScenario, oldGame.puzzleDetails);
+        } catch (err) {
+            logger.error(`Failed to restart scenario game ${oldGame.id}`, err);
+            oldGame.addAlert('danger', `Could not restart the scenario: ${err.message}`);
+            return;
+        }
+
+        for (const oldPlayer of Object.values(oldGame.getPlayersAndSpectators())) {
+            const newPlayer = newGame.playersAndSpectators[oldPlayer.name];
+            if (!oldPlayer.socket || !newPlayer) {
+                continue;
+            }
+
+            newPlayer.lobbyId = oldPlayer.lobbyId;
+            newPlayer.id = oldPlayer.socket.id;
+            newPlayer.connectionSucceeded = true;
+            newPlayer.socket = oldPlayer.socket;
+            // Keep the diff baseline so the client patches its current state.
+            newGame.jsonForUsers[newPlayer.name] = oldGame.jsonForUsers[oldPlayer.name];
+
+            // Stop the old game from sending state to the moved socket.
+            oldPlayer.socket = undefined;
+        }
+
+        newGame.addAlert('warning', 'Scenario restarted');
+        this.sendGameState(newGame);
     }
 
     /**
@@ -481,6 +575,10 @@ class GameServer {
         }
 
         for (let player of Object.values(game.getPlayersAndSpectators())) {
+            if (!player.socket) {
+                continue;
+            }
+
             player.socket.send('cleargamestate');
             player.socket.leaveChannel(game.id);
         }

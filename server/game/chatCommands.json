@@ -70,6 +70,11 @@
         "description": "Start over a new game with the current opponent, each picking a different deck"
     },
     {
+        "usage": "/restart",
+        "i18nKey": "howtoplay.cmd.restart",
+        "description": "Restart the current scenario from its starting position (scenario games only)"
+    },
+    {
         "usage": "/reveal-hand",
         "i18nKey": "howtoplay.cmd.revealhand",
         "description": "Reveal your hand to the game log"

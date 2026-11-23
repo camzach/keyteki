@@ -24,6 +24,7 @@ class PendingGame {
         this.owner = owner;
         this.players = {};
         this.previousWinner = details.previousWinner;
+        this.puzzle = !!details.puzzle;
         this.showHand = details.showHand;
         this.spectators = {};
         this.started = false;
@@ -291,6 +292,11 @@ class PendingGame {
     }
 
     isVisibleFor(user) {
+        // Puzzle games are private to their creator and never listed in the lobby.
+        if (this.puzzle) {
+            return false;
+        }
+
         if (!user) {
             return true;
         }

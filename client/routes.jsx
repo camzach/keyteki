@@ -26,6 +26,7 @@ import Privacy from './pages/Privacy';
 import BanlistAdmin from './pages/BanlistAdmin';
 import Patreon from './pages/Patreon';
 import AllianceBuilderPage from './pages/AllianceBuilder';
+import Scenario from './pages/Scenario';
 
 const routes = [
     { path: '/', action: () => <Lobby key='lobby' /> },
@@ -71,6 +72,7 @@ const routes = [
         action: () => <TournamentLobby key='tournamentlobby' />,
         permission: 'canManageTournaments'
     },
+    { path: '/scenario', action: () => <Scenario key='scenario' /> },
     { path: '/security', action: () => <Security key='security' /> },
     { path: '/users', action: () => <UserAdmin key='useradmin' />, permission: 'canManageUsers' },
     { path: '/nodes', action: () => <NodesAdmin key='nodesadmin' />, permission: 'canManageNodes' },

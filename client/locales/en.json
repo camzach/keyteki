@@ -361,6 +361,7 @@
     "howtoplay.cmd.forge": "Forge a key",
     "howtoplay.cmd.givecontrol": "Give control of a card to your opponent. Use with caution",
     "howtoplay.cmd.manual": "Activate or deactivate manual mode (see above).",
+    "howtoplay.cmd.restart": "Restart the current scenario from its starting position (scenario games only).",
     "howtoplay.cmd.rematch": "Start over a new game with the current opponent.",
     "howtoplay.cmd.token": "Choose a card and change the number of tokens of type x to y",
     "howtoplay.cmd.unforge": "Unforge a key",

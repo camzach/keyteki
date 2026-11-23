@@ -154,6 +154,9 @@ class GameSocket extends EventEmitter {
             case 'STARTGAME':
                 this.emit('onStartGame', message.arg);
                 break;
+            case 'STARTSCENARIO':
+                this.emit('onStartScenario', message.arg.game, message.arg.scenario);
+                break;
             case 'SPECTATOR':
                 this.emit('onSpectator', message.arg.game, message.arg.user);
                 break;

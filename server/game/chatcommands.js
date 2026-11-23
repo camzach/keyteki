@@ -28,6 +28,7 @@ class ChatCommands {
             '/rematch': this.rematch,
             '/rematch-swap-decks': this.rematchSwap,
             '/rematch-change-decks': this.rematchChange,
+            '/restart': this.restart,
             '/reveal-hand': this.revealHand,
             '/shuffle': this.shuffle,
             '/start-clocks': this.startClocks,
@@ -390,6 +391,15 @@ class ChatCommands {
         let lowerToken = token.toLowerCase();
 
         return this.tokens.includes(lowerToken);
+    }
+
+    restart(player) {
+        if (!this.game.puzzle) {
+            return false;
+        }
+
+        this.game.addAlert('warning', '{0} restarts the scenario', player);
+        this.game.router.restartScenario(this.game);
     }
 
     rematch(player) {

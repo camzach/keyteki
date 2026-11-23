@@ -21,6 +21,7 @@ import Privacy from './pages/Privacy';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import ResetPassword from './pages/ResetPassword';
+import Scenario from './pages/Scenario';
 import Security from './pages/Security.jsx';
 import TournamentLobby from './Components/Games/TournamentLobby';
 import Unauthorised from './pages/Unauthorised';
@@ -76,6 +77,7 @@ const AppRoutes = ({ currentGame, user }) => {
                 path='/tournamentlobby'
                 element={requirePermission('canManageTournaments', <TournamentLobby />)}
             />
+            <Route path='/scenario' element={<Scenario />} />
             <Route path='/security' element={<Security />} />
             <Route path='/users' element={requirePermission('canManageUsers', <UserAdmin />)} />
             <Route path='/nodes' element={requirePermission('canManageNodes', <NodesAdmin />)} />

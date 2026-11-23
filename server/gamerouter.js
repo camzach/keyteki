@@ -58,6 +58,31 @@ class GameRouter extends EventEmitter {
     }
 
     /**
+     * Starts a puzzle game from a scenario payload. Puzzle games are not
+     * persisted to the database.
+     *
+     * @param {import("./pendinggame.js")} game
+     * @param {object} scenario - validated scenario payload
+     */
+    startScenarioGame(game, scenario) {
+        let node = this.getNextAvailableGameNode();
+        if (!node) {
+            logger.error('Could not find new node for scenario game');
+
+            return undefined;
+        }
+
+        node.numGames++;
+
+        this.sendCommand(node.identity, 'STARTSCENARIO', {
+            game: game.getStartGameDetails(),
+            scenario: scenario
+        });
+
+        return node;
+    }
+
+    /**
      * @param {import("./pendinggame.js")} game
      * @param {import("./models/User")} user
      */
@@ -296,8 +321,16 @@ class GameRouter extends EventEmitter {
                 this.emit('onGameClosed', message.arg.game);
 
                 break;
+            case 'SCENARIOFAILED':
+                if (worker) {
+                    worker.numGames--;
+                }
+
+                this.emit('onScenarioFailed', message.arg.gameId, message.arg.error);
+
+                break;
             case 'PLAYERLEFT':
-                if (!message.arg.spectator) {
+                if (!message.arg.spectator && !message.arg.game.puzzle) {
                     this.gameService.update(message.arg.game);
                 }
 

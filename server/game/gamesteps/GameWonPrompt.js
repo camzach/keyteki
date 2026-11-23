@@ -33,6 +33,14 @@ class GameWonPrompt extends AllPlayerPrompt {
     }
 
     activePrompt(player) {
+        if (this.game.puzzle) {
+            return {
+                promptTitle: 'Puzzle Solved',
+                menuTitle: 'Congrats! You solved the puzzle!',
+                buttons: [{ arg: 'continue', text: 'Continue Playing' }]
+            };
+        }
+
         const opponentLeft = this.game.getPlayers().some((other) => other !== player && other.left);
         const isAdaptive = this.game.gameFormat === 'adaptive-bo1';
 
@@ -69,6 +77,15 @@ class GameWonPrompt extends AllPlayerPrompt {
     }
 
     menuCommand(player, arg) {
+        if (this.game.puzzle) {
+            // The placeholder opponent can't agree to anything, so just dismiss.
+            this.game.continuePlaying = true;
+            for (const p of this.game.getPlayers()) {
+                this.clickedButton[p.name] = true;
+            }
+            return true;
+        }
+
         const description = ButtonArgToRequest[arg];
         if (!description) {
             return true;

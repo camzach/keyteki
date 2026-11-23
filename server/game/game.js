@@ -34,6 +34,7 @@ const MenuCommands = require('./MenuCommands');
 const TimeLimit = require('./TimeLimit');
 const PlainTextGameChatFormatter = require('./PlainTextGameChatFormatter');
 const CardVisibility = require('./CardVisibility');
+const { isGoalMet } = require('../scenario/goal');
 
 /**
  * @import {EventName} from './Events/types');
@@ -608,6 +609,16 @@ class Game extends EventEmitter {
             return;
         }
 
+        if (this.puzzle && this.puzzleGoal) {
+            if (isGoalMet(this, this.puzzleGoal)) {
+                this.recordWinner(
+                    this.getPlayerByName(this.puzzleGoal.playerNames[0]),
+                    'puzzle solved'
+                );
+                return;
+            }
+        }
+
         for (const player of this.getPlayers()) {
             if (Object.values(player.keys).every((key) => key)) {
                 this.recordWinner(player, 'keys');
@@ -759,7 +770,9 @@ class Game extends EventEmitter {
             return;
         }
 
-        if (!this.isSpectator(player) && this.manualMode) {
+        // /restart is available without manual mode in puzzle games.
+        const commandsEnabled = this.manualMode || (this.puzzle && args[0] === '/restart');
+        if (!this.isSpectator(player) && commandsEnabled) {
             if (this.chatCommands.executeCommand(player, args[0], args)) {
                 this.checkGameState(true, player);
                 return;
@@ -1688,6 +1701,7 @@ class Game extends EventEmitter {
             id: this.savedGameId,
             players: players,
             previousWinner: this.previousWinner,
+            puzzle: !!this.puzzle,
             startedAt: this.startedAt,
             swap: this.swap,
             winReason: this.winReason,
