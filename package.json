@@ -8,6 +8,7 @@
     },
     "scripts": {
         "start": "node .",
+        "images": "node scripts/fetch-images.js",
         "scenario:export": "node server/scenario/export.js",
         "test": "vitest run",
         "test:watch": "vitest",

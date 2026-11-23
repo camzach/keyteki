@@ -31,8 +31,16 @@ npm run typecheck:client
 npm run build            # production client build into dist/
 ```
 
-Card data is read from `master-vault-data/packs/*.json`; card images from
-`public/img/cards/<id>.png` (not tracked in git).
+Card data is read from `master-vault-data/packs/*.json`. Card images are not in
+git; download them into `public/img/cards/<id>.png` (about 750MB) with:
+
+```bash
+npm run images                 # every card, skipping ones already downloaded
+npm run images -- anger troll  # only these card ids
+npm run images -- --force      # download again
+```
+
+The board works without images, but cards show as blanks.
 
 ## Puzzle scenarios
 
