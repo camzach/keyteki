@@ -68,7 +68,9 @@ connections are kept.
 ## Payload format
 
 A scenario is compact JSON using the same vocabulary as `setupTest`
-(see [`server/scenario/payload.js`](../server/scenario/payload.js)):
+(see [`server/scenario/payload.js`](../server/scenario/payload.js)). A JSON
+Schema for it is served at `/scenario.schema.json` and generated from
+[`server/scenario/schema.js`](../server/scenario/schema.js):
 
 ```json
 {

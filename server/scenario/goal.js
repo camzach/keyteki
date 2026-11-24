@@ -192,6 +192,7 @@ function describeCondition(condition) {
 }
 
 module.exports = {
+    LOCATIONS,
     compactGoal,
     describeCondition,
     isGoalMet,

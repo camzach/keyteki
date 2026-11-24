@@ -124,8 +124,11 @@ const Scenario = () => {
         <div className='mx-auto w-full max-w-5xl'>
             <Panel title='Scenario'>
                 <p className='mb-2 text-sm'>
-                    Paste a scenario code to start a puzzle with a pre-built board. The code is a
-                    base64 (or URL-safe base64) encoded scenario.
+                    Paste a
+                    <a href='/scenario.schema.json' target='_blank' rel='noreferrer'>
+                        {' scenario code '}
+                    </a>
+                    to start a puzzle with a pre-built board.
                 </p>
                 <TextArea
                     className='w-full font-mono text-xs'

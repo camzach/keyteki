@@ -8,6 +8,7 @@ const { Server: SocketServer } = require('socket.io');
 const logger = require('./log.js');
 const Constants = require('./constants');
 const PuzzleServer = require('./puzzleserver.js');
+const { scenarioSchema } = require('./scenario/schema.js');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -40,6 +41,11 @@ async function init({ isDeveloping }) {
             return { name: Constants.HousesNames[i], value: house };
         });
         res.send({ success: true, factions });
+    });
+
+    app.get('/scenario.schema.json', (req, res) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.type('application/schema+json').send(scenarioSchema);
     });
 
     app.use(express.static(path.join(ROOT, 'public')));
