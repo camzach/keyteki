@@ -8,6 +8,8 @@
  */
 
 const Game = require('../game/game.js');
+const GiganticCard = require('../game/GiganticCard.js');
+const cardClasses = require('../game/cards');
 const Settings = require('../settings.js');
 const logger = require('../log.js');
 const { describeCondition } = require('./goal.js');
@@ -23,9 +25,22 @@ function normaliseInPlay(side) {
     );
 }
 
+// The id of the other half when the label is one half of a gigantic creature.
+function giganticPartnerId(label) {
+    const { id } = deckBuilder.getCard(label);
+    const cardClass = cardClasses[id];
+
+    if (!cardClass || !(cardClass.prototype instanceof GiganticCard)) {
+        return undefined;
+    }
+
+    return id.endsWith('2') ? id.slice(0, -1) : `${id}2`;
+}
+
 /**
- * Convert one side of a payload into `setupTest` options. Upgrades and purged
- * cards have no setupTest zone, so they are added to the deck and moved later.
+ * Convert one side of a payload into `setupTest` options. Upgrades, purged
+ * cards and the other halves of gigantic creatures have no setupTest zone, so
+ * they are added to the deck and moved later.
  */
 function toSetupOptions(side = {}) {
     const entries = normaliseInPlay(side);
@@ -33,6 +48,9 @@ function toSetupOptions(side = {}) {
         ...(entry.upgrades || []),
         ...(entry.under || [])
     ]);
+    const giganticPartners = entries
+        .map((entry) => giganticPartnerId(entry.card))
+        .filter((id) => id);
 
     return {
         house: side.house,
@@ -44,8 +62,20 @@ function toSetupOptions(side = {}) {
         hand: side.hand,
         discard: side.discard,
         archives: side.archives,
-        deck: [...(side.deck || []), ...upgrades, ...(side.purged || [])]
+        deck: [...(side.deck || []), ...upgrades, ...(side.purged || []), ...giganticPartners]
     };
+}
+
+// Mirrors the composition done by PutIntoPlayAction when a gigantic creature is played.
+function composeGigantic(wrapper, card) {
+    const player = wrapper.player;
+    const part = player.deck.find((c) => c.id === card.compositeId);
+    const oldTopOfDeck = player.deck[0];
+
+    player.removeCardFromPile(part);
+    card.composedPart = part;
+    card.image = card.compositeImageId || card.id;
+    player.checkDeckAfterCardMove(oldTopOfDeck);
 }
 
 function attachUpgrade(wrapper, upgradeLabel, parent) {
@@ -87,6 +117,10 @@ function applyBoardDetails(wrapper, side = {}) {
 
     entries.forEach((entry, index) => {
         const card = cardsInPlay[index];
+
+        if (card.gigantic && !card.composedPart) {
+            composeGigantic(wrapper, card);
+        }
 
         // Token counts are absolute, so they replace any printed values (e.g. armor).
         for (const [type, count] of Object.entries(entry.tokens || {})) {

@@ -40,6 +40,9 @@ npm run images -- anger troll  # only these card ids
 npm run images -- --force      # download again
 ```
 
+It also builds `public/img/cards/<id>-complete.png` for each gigantic creature from its two
+halves; those are what the board shows once a gigantic creature is in play.
+
 The board works without images, but cards show as blanks.
 
 ## Puzzle scenarios

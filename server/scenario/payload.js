@@ -40,6 +40,8 @@
  *   }
  *
  * Cards are referenced by id (e.g. "sample-42-c") or exact card name.
+ * A gigantic creature goes in "inPlay" as either half (e.g. "deusillus"); the
+ * other half is composed with it automatically.
  */
 
 const { compactGoal, validateGoal } = require('./goal.js');
